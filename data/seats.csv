@@ -1,0 +1,11 @@
+trainId,coachId,seatNumber,bookingPnr
+12345,C1,S3,null
+12345,C1,S4,null
+12345,C1,S5,null
+12345,C1,S1,null
+12345,C1,S2,null
+12345,C2,S3,null
+12345,C2,S4,null
+12345,C2,S5,null
+12345,C2,S1,null
+12345,C2,S2,null
