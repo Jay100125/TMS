@@ -15,15 +15,16 @@ import java.util.Map;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class RequestHandler implements Runnable
 {
-  private final Socket socket;
+  private Socket socket;
 
-  private final ConcurrentHashMap<String, Train> trainMap;
+  private ConcurrentHashMap<String, Train> trainMap;
 
-  private final ConcurrentHashMap<String, Map<String, String>> bookings;
+  private ConcurrentHashMap<String, Map<String, String>> bookings;
 
   public RequestHandler(Socket socket, ConcurrentHashMap<String, Train> trainMap,
                         ConcurrentHashMap<String, Map<String, String>> bookings)
@@ -180,15 +181,6 @@ public class RequestHandler implements Runnable
       return "Coach not found";
     }
 
-    var totalAvailable = coaches.stream()
-      .mapToInt(Coach::getAvailableSeatCount)
-      .sum();
-
-    if (totalAvailable < numberOfSeats)
-    {
-      return "Not enough seats available";
-    }
-
     String pnr = generatePNR();
     var confirmedSeats = new ArrayList<String>();
 
@@ -196,31 +188,22 @@ public class RequestHandler implements Runnable
     {
       while (confirmedSeats.size() < numberOfSeats)
       {
-        List<String> availableSeats = coach.getAvailableSeats();
-        if (availableSeats.isEmpty())
-        {
-          break;
-        }
-
-        String seat = availableSeats.get(0); // Peek at the first seat
-        if (coach.tryBookSeats(List.of(seat), pnr))
+        String seat = coach.pollAndBookSeat(pnr);
+        if (seat != null)
         {
           confirmedSeats.add(seat);
         }
         else
         {
-          continue;
+          break; // No more seats in this coach
         }
       }
       if (confirmedSeats.size() == numberOfSeats) break;
     }
 
-    // Check if we got enough seats
     if (confirmedSeats.size() < numberOfSeats)
     {
-      // Release any booked seats if we didn't get enough
       coaches.forEach(c -> c.releaseSeats(confirmedSeats));
-
       return "Not enough seats available";
     }
 
@@ -231,7 +214,7 @@ public class RequestHandler implements Runnable
     bookingData.put("seats", String.join(",", confirmedSeats));
     bookings.put(pnr, bookingData);
 
-    return "Train id " + trainId +" Booking successful. PNR: " + pnr + " Seats: " + String.join(",", confirmedSeats);
+    return "Booking successful. PNR: " + pnr + " Seats: " + String.join(",", confirmedSeats);
   }
 
   private String generatePNR()

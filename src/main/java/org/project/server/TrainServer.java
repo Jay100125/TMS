@@ -66,7 +66,7 @@ public class TrainServer
 
   private static void createSampleTrain()
   {
-    Train train = new Train("12345", "SA", "SB",
+    Train train = new Train("12345", "sa", "SB",
       LocalDate.of(2025, 10, 10), LocalDate.of(2025, 10, 11));
 
     train.addCoach("Sleeper", "C1", 5);

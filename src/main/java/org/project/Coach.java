@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,8 @@ public class Coach
 
   private final ConcurrentHashMap<String, String> seatBookings = new ConcurrentHashMap<>();
 
+  private final ConcurrentLinkedQueue<String> availableSeats;
+
   private final AtomicInteger availableSeatCount;
 
   public Coach (String type, String coachId, int totalSeats)
@@ -25,9 +28,14 @@ public class Coach
 
     this.availableSeatCount = new AtomicInteger(totalSeats);
 
+    this.availableSeats = new ConcurrentLinkedQueue<>();
+
+
     for (int i = 1; i <= totalSeats; i++)
     {
       var seat = coachId + "-S" + i;
+
+      availableSeats.add(seat);
 
       seatBookings.put(seat, "UNBOOKED");
     }
@@ -42,43 +50,30 @@ public class Coach
 
   public List<String> getAvailableSeats()
   {
-    return seatBookings.entrySet().stream()
-      .filter(e -> "UNBOOKED".equals(e.getValue()))
-      .map(Map.Entry::getKey)
-      .collect(Collectors.toList());
+    return new ArrayList<>(availableSeats);
   }
 
-  public boolean tryBookSeats(List<String> seats, String pnr)
+  public String pollAndBookSeat(String pnr)
   {
-    List<String> booked = new ArrayList<>();
-    for (String seat : seats)
+    String seat = availableSeats.poll();
+    if (seat != null)
     {
-      if (seatBookings.replace(seat, "UNBOOKED", pnr))
-      {
-        booked.add(seat);
-
-        availableSeatCount.decrementAndGet();
-      }
-      else
-      {
-        for (String bookedSeat : booked)
-        {
-          seatBookings.put(bookedSeat, "UNBOOKED");
-
-          availableSeatCount.incrementAndGet();
-        }
-        return false;
-      }
+      seatBookings.put(seat, pnr);
+      availableSeatCount.decrementAndGet();
     }
-    return true;
+    return seat;
   }
 
   public void releaseSeats(List<String> seats)
   {
     for (String seat : seats)
     {
-      if (seatBookings.replace(seat, seatBookings.get(seat), "UNBOOKED"))
+      String pnr = seatBookings.remove(seat);
+
+      if (pnr != null)
       {
+        availableSeats.add(seat);
+
         availableSeatCount.incrementAndGet();
       }
     }
