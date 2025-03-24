@@ -46,6 +46,7 @@ public class TrainServer
     finally
     {
       executorService.shutdown();
+
       System.out.println("Shutting down server...");
 
       try

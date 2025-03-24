@@ -15,7 +15,6 @@ import java.util.Map;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class RequestHandler implements Runnable
@@ -211,6 +210,7 @@ public class RequestHandler implements Runnable
     Map<String, String> bookingData = new HashMap<>();
     bookingData.put("userId", userId);
     bookingData.put("trainId", trainId);
+    bookingData.put("coachType", coachType);
     bookingData.put("seats", String.join(",", confirmedSeats));
     bookings.put(pnr, bookingData);
 
@@ -235,23 +235,27 @@ public class RequestHandler implements Runnable
 
     Train train = trainMap.get(booking.get("trainId"));
 
+    String coachType = booking.get("coachType").toLowerCase();
+
     if (train == null) return "Train not found";
 
-    // Group seats by coach based on prefix (e.g., "S1-S1" -> "S1")
+    // Group seats by coach based on prefix (e.g., "C1-S1" -> "S1")
     List<String> seats = List.of(booking.get("seats").split(","));
 
-    for (var coachType : train.getCoachTypes().values())
-    {
-      for (var coach : coachType)
-      {
-        var seatsInCoach = seats.stream()
-          .filter(seat -> seat.startsWith(coach.getCoachId()))
-          .collect(Collectors.toList());
+    List<Coach> coaches = train.getCoachTypes().get(coachType);
 
-        if (!seatsInCoach.isEmpty())
-        {
-          coach.releaseSeats(seatsInCoach);
-        }
+    if (coaches == null || coaches.isEmpty())
+      return "Coach type not found in train";
+
+    for (Coach coach : coaches)
+    {
+      List<String> seatsInCoach = seats.stream()
+        .filter(seat -> seat.startsWith(coach.getCoachId()))
+        .collect(Collectors.toList());
+
+      if (!seatsInCoach.isEmpty())
+      {
+        coach.releaseSeats(seatsInCoach);
       }
     }
     return "Booking with PNR: " + pnr + " cancelled successfully.";

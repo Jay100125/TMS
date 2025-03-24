@@ -14,7 +14,7 @@ public class Coach
 
   private final String coachId;
 
-  private final ConcurrentHashMap<String, String> seatBookings = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, String> seatBookings = new ConcurrentHashMap<>();  // If i want to add another funcitonality from admin side
 
   private final ConcurrentLinkedQueue<String> availableSeats;
 
