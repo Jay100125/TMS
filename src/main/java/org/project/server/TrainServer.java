@@ -14,14 +14,15 @@ import java.util.concurrent.TimeUnit;
 
 public class TrainServer
 {
+  // {TrainId -> traindetails}
   private static final ConcurrentHashMap<String, Train> trainMap = new ConcurrentHashMap<>();
 
+  // pnr -> {userId, trainId, coachType, seats}
   private static final ConcurrentHashMap<String, Map<String, String>> bookings = new ConcurrentHashMap<>();
 
   private static final int PORT = 8080;
 
-  public static void main(String[] args) throws IOException
-  {
+  public static void main(String[] args) {
     createSampleTrain();
 
     ExecutorService executorService = Executors.newFixedThreadPool(5);

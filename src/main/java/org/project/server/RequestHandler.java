@@ -123,11 +123,13 @@ public class RequestHandler implements Runnable
         .append("\nCoaches:\n");
 
       // Iterate through all coach types and their coaches
-      for (var entry : train.getCoachTypes().entrySet()) {
+      for (var entry : train.getCoachTypes().entrySet())
+      {
         var coachType = entry.getKey();
         var coaches = entry.getValue();
 
-        for (var coach : coaches) {
+        for (var coach : coaches)
+        {
           responseBuilder
             .append("Type: ").append(coachType)
             .append(", Available Seats: ").append(coach.getAvailableSeatCount())
@@ -168,6 +170,7 @@ public class RequestHandler implements Runnable
     }
 
     Train train = trainMap.get(trainId);
+
     if (train == null)
     {
       return "Train not found";
@@ -181,6 +184,7 @@ public class RequestHandler implements Runnable
     }
 
     String pnr = generatePNR();
+
     var confirmedSeats = new ArrayList<String>();
 
     for (var coach : coaches)
@@ -263,84 +267,3 @@ public class RequestHandler implements Runnable
 }
 
 
-
-//  public String handleBooking(String[] parts)
-//  {
-//    String userId = parts[1];
-//
-//    String trainId = parts[2];
-//
-//    String coachType = parts[3];
-//
-//    int numberOfSeats = Integer.parseInt(parts[4]);
-//
-//    if (numberOfSeats <= 0) {
-//      return "Invalid number of seats";
-//    }
-//
-//    Train train = trainMap.get(trainId);
-//
-//    if (train == null)
-//    {
-//      return "Train not found";
-//    }
-//
-//    var coaches = train.getCoachTypes().get(coachType.toLowerCase());
-//
-//    System.out.println(coaches);
-//
-//    if (coaches == null || coaches.isEmpty())
-//    {
-//      return "Coach not found";
-//    }
-//
-//    var totalAvailable = coaches.stream()
-//      .mapToInt(Coach::getAvailableSeatCount)
-//      .sum();
-//
-//    if (totalAvailable < numberOfSeats)
-//    {
-//      return "Not enough seats available";
-//    }
-//
-//    // Collect seats across coaches
-//    var confirmedSeats = new ArrayList<String>();
-//    String pnr = generatePNR();
-//    for (var coach : coaches)
-//    {
-//      var availableSeats = coach.getAvailableSeats();
-//
-//      while (confirmedSeats.size() < numberOfSeats && !availableSeats.isEmpty())
-//      {
-//
-//        String seat = availableSeats.get(0);
-//        if(coach.tryBookSeats(List.of(seat), pnr))
-//        {
-//          confirmedSeats.add(seat);
-//        }
-//        else
-//        {
-//          continue;
-//        }
-//      }
-//      if (confirmedSeats.size() == numberOfSeats) break;
-//    }
-//
-//    if (confirmedSeats.size() < numberOfSeats)
-//    {
-//      coaches.forEach(c -> c.releaseSeats(confirmedSeats));
-//      return "Not enough seats available";
-//    }
-//
-//    Map<String, String> bookingData = new HashMap<>();
-//
-//    bookingData.put("userId", userId);
-//
-//    bookingData.put("trainId", trainId);
-//
-//    bookingData.put("seats", String.join(",", confirmedSeats));
-//
-//    bookings.put(pnr, bookingData);
-//
-//    return "Booking successful. PNR: " + pnr + " Seats: " + String.join(",", confirmedSeats);
-//  }

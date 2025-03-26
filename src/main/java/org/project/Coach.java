@@ -48,11 +48,6 @@ public class Coach
     return availableSeatCount.get();
   }
 
-  public List<String> getAvailableSeats()
-  {
-    return new ArrayList<>(availableSeats);
-  }
-
   public String pollAndBookSeat(String pnr)
   {
     String seat = availableSeats.poll();
