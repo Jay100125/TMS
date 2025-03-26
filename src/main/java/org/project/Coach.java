@@ -53,7 +53,7 @@ public class Coach
     String seat = availableSeats.poll();
     if (seat != null)
     {
-      seatBookings.put(seat, pnr);
+      seatBookings.replace(seat, "UNBOOKED", pnr);
       availableSeatCount.decrementAndGet();
     }
     return seat;
@@ -63,7 +63,8 @@ public class Coach
   {
     for (String seat : seats)
     {
-      String pnr = seatBookings.put(seat, "UNBOOKED");
+      String pnr = seatBookings.get(seat);
+      seatBookings.replace(seat, pnr, "UNBOOKED");
 
       if (pnr != null)
       {

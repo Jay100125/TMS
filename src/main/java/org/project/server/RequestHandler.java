@@ -85,6 +85,9 @@ public class RequestHandler implements Runnable
 
   public String handleSearch(String[] parts)
   {
+    if(parts.length != 4)
+      return "Invalid command";
+
     String source = parts[1];
 
     String destination = parts[2];
@@ -159,6 +162,9 @@ public class RequestHandler implements Runnable
 
   public String handleBooking(String[] parts)
   {
+    if(parts.length != 5)
+      return "Invalid command";
+
     String userId = parts[1];
     String trainId = parts[2];
     String coachType = parts[3];
@@ -228,6 +234,9 @@ public class RequestHandler implements Runnable
 
   public String handleCancellation(String[] parts)
   {
+    if(parts.length != 2)
+      return "Invalid command";
+
     String pnr = parts[1];
 
     Map<String, String> booking = bookings.remove(pnr);
