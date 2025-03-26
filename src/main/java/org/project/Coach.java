@@ -68,7 +68,7 @@ public class Coach
   {
     for (String seat : seats)
     {
-      String pnr = seatBookings.remove(seat);
+      String pnr = seatBookings.put(seat, "UNBOOKED");
 
       if (pnr != null)
       {
