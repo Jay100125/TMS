@@ -1,12 +1,9 @@
 package org.project;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class Coach
 {
@@ -14,7 +11,7 @@ public class Coach
 
   private final String coachId;
 
-  private final ConcurrentHashMap<String, String> seatBookings = new ConcurrentHashMap<>();  // If i want to add another funcitonality from admin side
+  private final ConcurrentHashMap<String, String> seatBookings = new ConcurrentHashMap<>();
 
   private final ConcurrentLinkedQueue<String> availableSeats;
 
@@ -53,7 +50,7 @@ public class Coach
     String seat = availableSeats.poll();
     if (seat != null)
     {
-      seatBookings.replace(seat, "UNBOOKED", pnr);
+      seatBookings.put(seat, pnr);
       availableSeatCount.decrementAndGet();
     }
     return seat;
@@ -64,9 +61,8 @@ public class Coach
     for (String seat : seats)
     {
       String pnr = seatBookings.get(seat);
-      seatBookings.replace(seat, pnr, "UNBOOKED");
 
-      if (pnr != null)
+      if (pnr != null && seatBookings.replace(seat, pnr, "UNBOOKED"))
       {
         availableSeats.add(seat);
 

@@ -3,27 +3,21 @@ package org.project.server;
 import org.project.Coach;
 import org.project.Train;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.Map;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class RequestHandler implements Runnable
 {
-  private Socket socket;
+  private final Socket socket;
 
-  private ConcurrentHashMap<String, Train> trainMap;
+  private final ConcurrentHashMap<String, Train> trainMap;
 
-  private ConcurrentHashMap<String, Map<String, String>> bookings;
+  private final ConcurrentHashMap<String, Map<String, String>> bookings;
 
   public RequestHandler(Socket socket, ConcurrentHashMap<String, Train> trainMap,
                         ConcurrentHashMap<String, Map<String, String>> bookings)
@@ -38,84 +32,106 @@ public class RequestHandler implements Runnable
   @Override
   public void run()
   {
-    try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-         PrintWriter out = new PrintWriter(socket.getOutputStream(), true))
+    try (ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()))
     {
+
       System.out.println("Client connected");
 
-      String request = in.readLine();
+      // Read HashMap request
+      @SuppressWarnings("unchecked")
+      Map<String, String> request = (Map<String, String>) in.readObject();
 
-      if (request != null)
-      {
-        String response = processRequest(request);
+      Map<String, String> response = processRequest(request);
 
-        if (response != null)
-        {
-          out.println(response);
-        }
-      }
+      // Send response HashMap
+      out.writeObject(response);
+
+      out.flush();
+
     }
-    catch (IOException e)
+    catch (IOException | ClassNotFoundException e)
     {
       System.err.println("Connection error: " + e.getMessage());
     }
+    finally
+    {
+      try
+      {
+        socket.close();
+
+        System.out.println("Client disconnected: " + socket.getInetAddress());
+      }
+      catch (IOException e)
+      {
+        System.err.println("Error closing socket: " + e.getMessage());
+      }
+    }
   }
 
-  public String processRequest(String request)
+  public Map<String, String> processRequest(Map<String, String> request)
   {
-    String[] parts = request.split(" ");
+    String command = request.get("command");
 
-    String command = parts[0];
+    Map<String, String> response = new HashMap<>();
 
     switch (command)
     {
       case "SEARCH":
-        return handleSearch(parts);
+        response.put("message", handleSearch(request));
+        break;
 
       case "BOOK":
-        return handleBooking(parts);
+        response.put("message", handleBooking(request));
+        break;
 
       case "CANCEL":
-        return handleCancellation(parts);
+        response.put("message", handleCancellation(request));
+        break;
 
-      default:
-        return "Invalid command";
+        default:
+        response.put("message", "400 Invalid command");
     }
+    return response;
   }
 
-  public String handleSearch(String[] parts)
+  public String handleSearch(Map<String, String> request)
   {
-    if(parts.length != 4)
-      return "Invalid command";
+    String source = request.get("source");
 
-    String source = parts[1];
+    String destination = request.get("destination");
 
-    String destination = parts[2];
+    String dateStr = request.get("date");
+
+    if (source == null || destination == null || dateStr == null)
+    {
+      return "400 Invalid Search command";
+    }
 
     LocalDate date;
-
     try
     {
-      date = LocalDate.parse(parts[3]);
+      date = LocalDate.parse(dateStr);
     }
     catch (DateTimeParseException e)
     {
-      return "Invalid date format";
+      return "400 Invalid date format";
     }
 
-    if(date.isBefore(LocalDate.now()))
+    if (date.isBefore(LocalDate.now()))
     {
-      return "Date cannot be in the past";
+      return "400 Date cannot be in the past";
     }
 
     List<Train> result = searchTrains(source, destination, date);
 
     if (result.isEmpty())
     {
-      return "No trains available for the given criteria.";
+      return "404 No trains available for the given criteria.";
     }
 
     var responseBuilder = new StringBuilder("Available Trains:\n");
+
     for (var train : result)
     {
       responseBuilder.append("Train ID: ").append(train.getTrainId())
@@ -125,16 +141,13 @@ public class RequestHandler implements Runnable
         .append(", Arrival: ").append(train.getArrivalDate())
         .append("\nCoaches:\n");
 
-      // Iterate through all coach types and their coaches
       for (var entry : train.getCoachTypes().entrySet())
       {
         var coachType = entry.getKey();
         var coaches = entry.getValue();
-
         for (var coach : coaches)
         {
-          responseBuilder
-            .append("Type: ").append(coachType)
+          responseBuilder.append("Type: ").append(coachType)
             .append(", Available Seats: ").append(coach.getAvailableSeatCount())
             .append("\n");
         }
@@ -160,33 +173,58 @@ public class RequestHandler implements Runnable
     return result;
   }
 
-  public String handleBooking(String[] parts)
+  public String handleBooking(Map<String, String> request)
   {
-    if(parts.length != 5)
-      return "Invalid command";
+    String userId = request.get("userId");
 
-    String userId = parts[1];
-    String trainId = parts[2];
-    String coachType = parts[3];
-    int numberOfSeats = Integer.parseInt(parts[4]);
+    String trainId = request.get("trainId");
+
+    String coachType = request.get("coachType");
+
+    String seatsStr = request.get("numberOfSeats");
+
+    if (userId == null || trainId == null || coachType == null || seatsStr == null)
+    {
+      return "400 Invalid book command";
+    }
+
+    int numberOfSeats;
+
+    try
+    {
+      numberOfSeats = Integer.parseInt(seatsStr);
+    }
+    catch (NumberFormatException e)
+    {
+      return "400 Invalid number of seats";
+    }
 
     if (numberOfSeats <= 0)
     {
-      return "Invalid number of seats";
+      return "400 Invalid number of seats";
     }
 
     Train train = trainMap.get(trainId);
 
     if (train == null)
     {
-      return "Train not found";
+      return "404 Train not found";
     }
 
     var coaches = train.getCoachTypes().get(coachType.toLowerCase());
 
     if (coaches == null || coaches.isEmpty())
     {
-      return "Coach not found";
+      return "404 Coach not found";
+    }
+
+    int totalAvailable = coaches.stream()
+      .mapToInt(Coach::getAvailableSeatCount)
+      .sum();
+
+    if (totalAvailable < numberOfSeats)
+    {
+      return "409 Not enough seats";
     }
 
     String pnr = generatePNR();
@@ -198,13 +236,14 @@ public class RequestHandler implements Runnable
       while (confirmedSeats.size() < numberOfSeats)
       {
         String seat = coach.pollAndBookSeat(pnr);
+
         if (seat != null)
         {
           confirmedSeats.add(seat);
         }
         else
         {
-          break; // No more seats in this coach
+          break;
         }
       }
       if (confirmedSeats.size() == numberOfSeats) break;
@@ -213,10 +252,10 @@ public class RequestHandler implements Runnable
     if (confirmedSeats.size() < numberOfSeats)
     {
       coaches.forEach(c -> c.releaseSeats(confirmedSeats));
-      return "Not enough seats available";
+
+      return "409 Not enough seats available";
     }
 
-    // Store booking data
     Map<String, String> bookingData = new HashMap<>();
     bookingData.put("userId", userId);
     bookingData.put("trainId", trainId);
@@ -224,7 +263,7 @@ public class RequestHandler implements Runnable
     bookingData.put("seats", String.join(",", confirmedSeats));
     bookings.put(pnr, bookingData);
 
-    return "Booking successful. PNR: " + pnr + " Seats: " + String.join(",", confirmedSeats);
+    return "Booking successful. Train id: " + trainId + " PNR: " + pnr + " Seats: " + String.join(",", confirmedSeats);
   }
 
   private String generatePNR()
@@ -232,19 +271,30 @@ public class RequestHandler implements Runnable
     return UUID.randomUUID().toString().replaceAll("-", "").substring(0, 5);
   }
 
-  public String handleCancellation(String[] parts)
+  public String handleCancellation(Map<String, String> request)
   {
-    if(parts.length != 2)
-      return "Invalid command";
+    String userId = request.get("userId");
 
-    String pnr = parts[1];
+    String pnr = request.get("pnr");
 
-    Map<String, String> booking = bookings.remove(pnr);
+    if (userId == null || pnr == null)
+    {
+      return "400 Invalid command";
+    }
+
+    Map<String, String> booking = bookings.get(pnr);
 
     if (booking == null)
     {
-      return "Booking not found";
+      return "400 Booking not found";
     }
+
+    if (!booking.get("userId").equals(userId))
+    {
+      return "403 Booking cancellation denied";
+    }
+
+    bookings.remove(pnr);
 
     Train train = trainMap.get(booking.get("trainId"));
 
@@ -252,13 +302,14 @@ public class RequestHandler implements Runnable
 
     if (train == null) return "Train not found";
 
-    // Group seats by coach based on prefix (e.g., "C1-S1" -> "S1")
     List<String> seats = List.of(booking.get("seats").split(","));
 
     List<Coach> coaches = train.getCoachTypes().get(coachType);
 
     if (coaches == null || coaches.isEmpty())
+    {
       return "Coach type not found in train";
+    }
 
     for (Coach coach : coaches)
     {
@@ -275,4 +326,20 @@ public class RequestHandler implements Runnable
   }
 }
 
-
+//Map<String, Integer> coachTypeTotals = new HashMap<>();
+//      for (var entry : train.getCoachTypes().entrySet()) {
+//String coachType = entry.getKey();
+//List<Coach> coaches = entry.getValue();
+//int totalAvailableSeats = coaches.stream()
+//  .mapToInt(Coach::getAvailableSeatCount)
+//  .sum();
+//        coachTypeTotals.put(coachType, totalAvailableSeats);
+//      }
+//
+//        // Append aggregated totals to response
+//        for (var entry : coachTypeTotals.entrySet()) {
+//  responseBuilder.append("Type: ").append(entry.getKey())
+//  .append(", Total Available Seats: ").append(entry.getValue())
+//  .append("\n");
+//      }
+//        responseBuilder.append("\n");

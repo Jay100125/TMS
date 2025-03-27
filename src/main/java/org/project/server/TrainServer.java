@@ -14,24 +14,25 @@ import java.util.concurrent.TimeUnit;
 
 public class TrainServer
 {
-  // {TrainId -> traindetails}
+  //  {TrainId -> train details}
   private static final ConcurrentHashMap<String, Train> trainMap = new ConcurrentHashMap<>();
 
-  // pnr -> {userId, trainId, coachType, seats}
+//  pnr -> {userId, trainId, coachType, seats}
   private static final ConcurrentHashMap<String, Map<String, String>> bookings = new ConcurrentHashMap<>();
 
   private static final int PORT = 8080;
 
-  public static void main(String[] args) {
+  public static void main(String[] args)
+  {
     createSampleTrain();
 
     ExecutorService executorService = Executors.newFixedThreadPool(5);
 
     System.out.println("Server started on port " + PORT);
 
-    try( ServerSocket serverSocket = new ServerSocket(PORT);)
+    try (ServerSocket serverSocket = new ServerSocket(PORT))
     {
-      while(true)
+      while (true)
       {
         Socket clientSocket = serverSocket.accept();
 
@@ -49,7 +50,6 @@ public class TrainServer
       executorService.shutdown();
 
       System.out.println("Shutting down server...");
-
       try
       {
         if (!executorService.awaitTermination(60, TimeUnit.SECONDS))
@@ -61,30 +61,24 @@ public class TrainServer
       {
         executorService.shutdownNow();
       }
-
       System.out.println("Server shutdown complete");
     }
   }
 
   private static void createSampleTrain()
   {
-    Train train = new Train("12345", "sa", "SB",
+    Train train = new Train("12345", "new mumbai", "SB",
       LocalDate.of(2025, 10, 10), LocalDate.of(2025, 10, 11));
-
     train.addCoach("Sleeper", "C1", 5);
     train.addCoach("Sleeper", "C2", 5);
     train.addCoach("Sleeper", "C3", 5);
     train.addCoach("AC", "A1", 5);
-
     trainMap.put(train.getTrainId(), train);
-
 
     Train train2 = new Train("54321", "SA", "SB",
       LocalDate.of(2025, 10, 10), LocalDate.of(2025, 10, 11));
-
     train2.addCoach("Sleeper", "C1", 3);
     train2.addCoach("Sleeper", "C2", 2);
-
     trainMap.put(train2.getTrainId(), train2);
 
     System.out.println("Created sample train data");

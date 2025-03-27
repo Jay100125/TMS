@@ -14,7 +14,7 @@ public class Train
 
   private final String destination;
 
-  private HashMap<String, List<Coach>> coaches = new HashMap<>();
+  private final HashMap<String, List<Coach>> coaches;
 
   private final LocalDate departureDate;
 

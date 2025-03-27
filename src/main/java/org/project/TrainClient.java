@@ -1,76 +1,91 @@
 package org.project;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
-public class TrainClient
-{
+public class TrainClient {
+  private static final int PORT = 8080;
+  private static final String HOST = "127.0.0.1";
+
   public static void main(String[] args)
   {
     Scanner scanner = new Scanner(System.in);
 
-    while(true)
+    while (true)
     {
       System.out.println("\nOptions: \n1. Search Trains\n2. Book Seats\n3. Cancel Booking\n4. Exit");
 
       String choice = scanner.nextLine();
 
-      String command = null;
+      Map<String, String> commandMap = new HashMap<>();
 
-      switch(choice)
+      switch (choice)
       {
         case "1":
           System.out.println("Source: ");
-          var source = scanner.nextLine();
+          String source = scanner.nextLine();
           if (source.trim().isEmpty()) System.out.println("Source cannot be empty");
 
           System.out.println("Destination: ");
-          var destination = scanner.nextLine();
+          String destination = scanner.nextLine();
           if (destination.trim().isEmpty()) System.out.println("Destination cannot be empty");
 
           System.out.println("Date (YYYY-MM-DD): ");
-          var date = scanner.nextLine();
-          command = "SEARCH " + source + " " + destination + " " + date;
+          String date = scanner.nextLine();
+
+          commandMap.put("command", "SEARCH");
+          commandMap.put("source", source);
+          commandMap.put("destination", destination);
+          commandMap.put("date", date);
           break;
 
         case "2":
           System.out.println("User id: ");
-          var id = scanner.nextLine();
+          String id = scanner.nextLine();
           if (id.trim().isEmpty()) System.out.println("User ID cannot be empty");
 
           System.out.println("Train id: ");
-          var trainId = scanner.nextLine();
+          String trainId = scanner.nextLine();
           if (trainId.trim().isEmpty()) System.out.println("Train ID cannot be empty");
 
           System.out.println("Coach type: ");
-          var coachType = scanner.nextLine();
+          String coachType = scanner.nextLine();
           if (coachType.trim().isEmpty()) System.out.println("Coach type cannot be empty");
 
           System.out.println("Number of Seats: ");
+          String numberOfSeats = scanner.nextLine();
           try
           {
-            var numberOfSeats = Integer.parseInt(scanner.nextLine());
-
-            if (numberOfSeats <= 0) System.out.println("Number of seats must be positive");
-
-            command = "BOOK " + id + " " + trainId + " " + coachType + " " + numberOfSeats;
+            if (Integer.parseInt(numberOfSeats) <= 0)
+              System.out.println("Number of seats must be positive");
           }
           catch (NumberFormatException e)
           {
             System.out.println("Number of seats must be integer");
+
+            continue;
           }
+
+          commandMap.put("command", "BOOK");
+          commandMap.put("userId", id);
+          commandMap.put("trainId", trainId);
+          commandMap.put("coachType", coachType);
+          commandMap.put("numberOfSeats", numberOfSeats);
           break;
 
         case "3":
+          System.out.println("User id: ");
+          String userId = scanner.nextLine();
           System.out.println("PNR number: ");
-          var pnrNumber = scanner.nextLine();
+          String pnrNumber = scanner.nextLine();
           if (pnrNumber.trim().isEmpty()) System.out.println("PNR cannot be empty");
 
-          command = "CANCEL " + pnrNumber;
+          commandMap.put("command", "CANCEL");
+          commandMap.put("userId", userId);
+          commandMap.put("pnr", pnrNumber);
           break;
 
         case "4":
@@ -81,35 +96,31 @@ public class TrainClient
           System.out.println("Invalid choice");
           continue;
       }
-      try(Socket socket = new Socket("127.0.0.1", 8080);
-          PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-          BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-      )
+
+      try (Socket socket = new Socket(HOST, PORT);
+           ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+           ObjectInputStream in = new ObjectInputStream(socket.getInputStream()))
       {
-        out.println(command);
+        // Send HashMap
+        out.writeObject(commandMap);
 
-        String response;
+        out.flush();
 
-        while ((response = in.readLine()) != null)
+        // Receive response HashMap
+        Map<String, String> response = (Map<String, String>) in.readObject();
+
+        if (response == null)
         {
-          System.out.println(response);
+          System.out.println("Error: No response received from server");
+        }
+        else
+        {
+          System.out.println(response.get("message"));
         }
       }
-      catch (NumberFormatException e)
-      {
-        System.out.println("Invalid number format: " + e.getMessage());
-      }
-      catch (IllegalArgumentException e)
-      {
-        System.out.println("Input error: " + e.getMessage());
-      }
-      catch (IOException e)
+      catch (IOException | ClassNotFoundException e)
       {
         System.out.println("Connection error: " + e.getMessage());
-      }
-      finally
-      {
-        System.out.println("Closing connection");
       }
     }
   }
