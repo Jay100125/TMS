@@ -2,9 +2,7 @@ package org.project.server;
 
 import org.project.Train;
 
-import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +16,7 @@ public class TrainServer
   private static final ConcurrentHashMap<String, Train> trainMap = new ConcurrentHashMap<>();
 
 //  pnr -> {userId, trainId, coachType, seats}
-  private static final ConcurrentHashMap<String, Map<String, String>> bookings = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, Map<String, String>> bookingRecord = new ConcurrentHashMap<>();
 
   private static final int PORT = 8080;
 
@@ -34,14 +32,14 @@ public class TrainServer
     {
       while (true)
       {
-        Socket clientSocket = serverSocket.accept();
+        var clientSocket = serverSocket.accept(); // TODO close in same method
 
         System.out.println("New client connected: " + clientSocket.getInetAddress());
 
-        executorService.submit(new RequestHandler(clientSocket, trainMap, bookings));
+        executorService.submit(new RequestHandler(clientSocket, trainMap, bookingRecord)); // TODO why pass every time
       }
     }
-    catch (IOException e)
+    catch (Exception e) // TODO Accept generalized exception
     {
       System.err.println("Error accepting client connection: " + e.getMessage());
     }

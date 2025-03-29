@@ -9,7 +9,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
 
 public class RequestHandler implements Runnable
 {
@@ -17,16 +19,15 @@ public class RequestHandler implements Runnable
 
   private final ConcurrentHashMap<String, Train> trainMap;
 
-  private final ConcurrentHashMap<String, Map<String, String>> bookings;
+  private final ConcurrentHashMap<String, Map<String, String>> bookingRecord;
 
-  public RequestHandler(Socket socket, ConcurrentHashMap<String, Train> trainMap,
-                        ConcurrentHashMap<String, Map<String, String>> bookings)
+  public RequestHandler(Socket socket, ConcurrentHashMap<String, Train> trainMap, ConcurrentHashMap<String, Map<String, String>> bookingRecord)
   {
     this.socket = socket;
 
     this.trainMap = trainMap;
 
-    this.bookings = bookings;
+    this.bookingRecord = bookingRecord;
   }
 
   @Override
@@ -39,10 +40,9 @@ public class RequestHandler implements Runnable
       System.out.println("Client connected");
 
       // Read HashMap request
-      @SuppressWarnings("unchecked")
-      Map<String, String> request = (Map<String, String>) in.readObject();
+      var request = (Map<String, String>) in.readObject();
 
-      Map<String, String> response = processRequest(request);
+      var response = processRequest(request); // TODO use var
 
       // Send response HashMap
       out.writeObject(response);
@@ -50,7 +50,7 @@ public class RequestHandler implements Runnable
       out.flush();
 
     }
-    catch (IOException | ClassNotFoundException e)
+    catch (Exception e)
     {
       System.err.println("Connection error: " + e.getMessage());
     }
@@ -62,7 +62,7 @@ public class RequestHandler implements Runnable
 
         System.out.println("Client disconnected: " + socket.getInetAddress());
       }
-      catch (IOException e)
+      catch (Exception e)
       {
         System.err.println("Error closing socket: " + e.getMessage());
       }
@@ -71,7 +71,7 @@ public class RequestHandler implements Runnable
 
   public Map<String, String> processRequest(Map<String, String> request)
   {
-    String command = request.get("command");
+    var command = request.get("command");
 
     Map<String, String> response = new HashMap<>();
 
@@ -97,11 +97,11 @@ public class RequestHandler implements Runnable
 
   public String handleSearch(Map<String, String> request)
   {
-    String source = request.get("source");
+    var source = request.get("source");
 
-    String destination = request.get("destination");
+    var destination = request.get("destination");
 
-    String dateStr = request.get("date");
+    var dateStr = request.get("date");
 
     if (source == null || destination == null || dateStr == null)
     {
@@ -123,7 +123,7 @@ public class RequestHandler implements Runnable
       return "400 Date cannot be in the past";
     }
 
-    List<Train> result = searchTrains(source, destination, date);
+    var result = searchTrains(source, destination, date);
 
     if (result.isEmpty())
     {
@@ -175,13 +175,13 @@ public class RequestHandler implements Runnable
 
   public String handleBooking(Map<String, String> request)
   {
-    String userId = request.get("userId");
+    var userId = request.get("userId");
 
-    String trainId = request.get("trainId");
+    var trainId = request.get("trainId");
 
-    String coachType = request.get("coachType");
+    var coachType = request.get("coachType");
 
-    String seatsStr = request.get("numberOfSeats");
+    var seatsStr = request.get("numberOfSeats");
 
     if (userId == null || trainId == null || coachType == null || seatsStr == null)
     {
@@ -227,7 +227,7 @@ public class RequestHandler implements Runnable
       return "409 Not enough seats";
     }
 
-    String pnr = generatePNR();
+    var pnr = generatePNR();
 
     var confirmedSeats = new ArrayList<String>();
 
@@ -235,7 +235,7 @@ public class RequestHandler implements Runnable
     {
       while (confirmedSeats.size() < numberOfSeats)
       {
-        String seat = coach.pollAndBookSeat(pnr);
+        var seat = coach.pollAndBookSeat(pnr);
 
         if (seat != null)
         {
@@ -261,7 +261,7 @@ public class RequestHandler implements Runnable
     bookingData.put("trainId", trainId);
     bookingData.put("coachType", coachType);
     bookingData.put("seats", String.join(",", confirmedSeats));
-    bookings.put(pnr, bookingData);
+    bookingRecord.put(pnr, bookingData);
 
     return "Booking successful. Train id: " + trainId + " PNR: " + pnr + " Seats: " + String.join(",", confirmedSeats);
   }
@@ -273,16 +273,16 @@ public class RequestHandler implements Runnable
 
   public String handleCancellation(Map<String, String> request)
   {
-    String userId = request.get("userId");
+    var userId = request.get("userId");
 
-    String pnr = request.get("pnr");
+    var pnr = request.get("pnr");
 
     if (userId == null || pnr == null)
     {
       return "400 Invalid command";
     }
 
-    Map<String, String> booking = bookings.get(pnr);
+    Map<String, String> booking = bookingRecord.get(pnr);
 
     if (booking == null)
     {
@@ -294,17 +294,17 @@ public class RequestHandler implements Runnable
       return "403 Booking cancellation denied";
     }
 
-    bookings.remove(pnr);
+    bookingRecord.remove(pnr);
 
     Train train = trainMap.get(booking.get("trainId"));
 
-    String coachType = booking.get("coachType").toLowerCase();
+    var coachType = booking.get("coachType").toLowerCase();
 
     if (train == null) return "Train not found";
 
-    List<String> seats = List.of(booking.get("seats").split(","));
+    var seats = List.of(booking.get("seats").split(","));
 
-    List<Coach> coaches = train.getCoachTypes().get(coachType);
+    var coaches = train.getCoachTypes().get(coachType);
 
     if (coaches == null || coaches.isEmpty())
     {
@@ -313,7 +313,7 @@ public class RequestHandler implements Runnable
 
     for (Coach coach : coaches)
     {
-      List<String> seatsInCoach = seats.stream()
+      var seatsInCoach = seats.stream()
         .filter(seat -> seat.startsWith(coach.getCoachId()))
         .collect(Collectors.toList());
 

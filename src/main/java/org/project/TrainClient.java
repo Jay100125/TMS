@@ -6,19 +6,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class TrainClient {
+public class TrainClient
+{
   private static final int PORT = 8080;
+
   private static final String HOST = "127.0.0.1";
 
   public static void main(String[] args)
   {
-    Scanner scanner = new Scanner(System.in);
+    var scanner = new Scanner(System.in);
 
     while (true)
     {
       System.out.println("\nOptions: \n1. Search Trains\n2. Book Seats\n3. Cancel Booking\n4. Exit");
 
-      String choice = scanner.nextLine();
+      var choice = scanner.nextLine();
 
       Map<String, String> commandMap = new HashMap<>();
 

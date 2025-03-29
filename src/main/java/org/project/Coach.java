@@ -47,7 +47,7 @@ public class Coach
 
   public String pollAndBookSeat(String pnr)
   {
-    String seat = availableSeats.poll();
+    var seat = availableSeats.poll();
     if (seat != null)
     {
       seatBookings.put(seat, pnr);
@@ -58,9 +58,9 @@ public class Coach
 
   public void releaseSeats(List<String> seats)
   {
-    for (String seat : seats)
+    for (var seat : seats)
     {
-      String pnr = seatBookings.get(seat);
+      var pnr = seatBookings.get(seat);
 
       if (pnr != null && seatBookings.replace(seat, pnr, "UNBOOKED"))
       {

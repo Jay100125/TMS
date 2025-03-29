@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Train
 {
@@ -15,6 +17,8 @@ public class Train
   private final String destination;
 
   private final HashMap<String, List<Coach>> coaches;
+
+//  private final ConcurrentHashMap<String, AtomicInteger> coachTypeAvailability = new ConcurrentHashMap<>();
 
   private final LocalDate departureDate;
 
@@ -38,6 +42,9 @@ public class Train
   public void addCoach(String type, String coachId, int totalSeats) {
     var coach = new Coach(type, coachId, totalSeats);
     coaches.computeIfAbsent(type.toLowerCase(), k -> new ArrayList<>()).add(coach);
+//    coachTypeAvailability.compute(type.toLowerCase(), (k, v) ->
+//      (v == null) ? new AtomicInteger(totalSeats) : new AtomicInteger(v.addAndGet(totalSeats))
+//    );
   }
 
   public String getTrainId()
@@ -66,6 +73,10 @@ public class Train
   {
     return arrivalDate;
   }
+
+//  public AtomicInteger getCoachTypeAvailability(String type) {
+//    return coachTypeAvailability.getOrDefault(type.toLowerCase(), new AtomicInteger(0));
+//  }
 
   @Override
   public String toString() {
