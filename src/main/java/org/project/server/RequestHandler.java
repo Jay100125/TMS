@@ -339,9 +339,9 @@ public class RequestHandler implements Runnable
       return "400 Invalid pnr";
     }
 
-    var userBookings = database.getBookingRecord().get(pnr);
+    Map<String, String> userBookings = database.getBookingRecord().get(pnr);
 
-    if (userBookings.isEmpty()) {
+    if (userBookings == null) {
       return "No bookings found for pnr: " + pnr;
     }
 

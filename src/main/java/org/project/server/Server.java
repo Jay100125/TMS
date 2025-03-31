@@ -35,7 +35,17 @@ public class Server
 
         System.out.println("New client connected: " + clientSocket.getInetAddress());
 
-        executorService.submit(new RequestHandler(clientSocket)); // TODO why pass every time
+        try
+        {
+          executorService.submit(new RequestHandler(clientSocket)); // TODO why pass every time
+        }
+        catch (Exception e)
+        {
+          if(!clientSocket.isClosed())
+          {
+            clientSocket.close();
+          }
+        }
       }
     }
     catch (Exception e) // TODO Accept generalized exception
