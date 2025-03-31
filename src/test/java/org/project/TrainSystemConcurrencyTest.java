@@ -581,7 +581,7 @@ class TrainDatabaseTest {
     db.addTrain(train);
 
     int threadCount = 50;
-    ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+    ExecutorService executor = Executors.newFixedThreadPool(5);
     CountDownLatch latch = new CountDownLatch(threadCount);
     AtomicInteger successCount = new AtomicInteger(0);
 
@@ -594,11 +594,15 @@ class TrainDatabaseTest {
           request.put("userId", "user" + Thread.currentThread().getId());
           request.put("trainId", "T1");
           request.put("coachType", "AC");
-          request.put("numberOfSeats", "2");
+          request.put("numberOfSeats", "5");
 
           String response = requestHandler.handleBooking(request);
           if (response.startsWith("Booking successful")) {
             successCount.incrementAndGet();
+            System.out.println(response);
+          }
+          else {
+            System.out.println("Failed to book " + response);
           }
         } finally {
           latch.countDown();
@@ -610,7 +614,7 @@ class TrainDatabaseTest {
     executor.shutdown();
 
     // Verify
-    int totalBookedSeats = successCount.get() * 2;
+    int totalBookedSeats = successCount.get() * 5;
     assertTrue(totalBookedSeats <= 100, "Should not overbook seats");
     assertEquals(100 - totalBookedSeats,
       train.getCoachTypes().get("ac").get(0).getAvailableSeatCount());

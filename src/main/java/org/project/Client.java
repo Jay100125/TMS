@@ -18,7 +18,7 @@ public class Client
 
     while (true)
     {
-      System.out.println("\nOptions: \n1. Search Trains\n2. Book Seats\n3. Cancel Booking\n4. Exit");
+      System.out.println("\nOptions: \n1. Search Trains\n2. Book Seats\n3. Cancel Booking\n4. My bookings\n5. Exit");
 
       var choice = scanner.nextLine();
 
@@ -91,9 +91,18 @@ public class Client
           break;
 
         case "4":
-          System.exit(0);
+          System.out.println("PNR number: ");
+          String pnr = scanner.nextLine();
+          if (pnr.trim().isEmpty()) System.out.println("PNR cannot be empty");
+
+          commandMap.put("command", "MY_BOOKINGS");
+          commandMap.put("pnr", pnr);
           break;
 
+
+        case "5":
+          System.exit(0);
+          break;
         default:
           System.out.println("Invalid choice");
           continue;

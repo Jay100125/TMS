@@ -39,7 +39,7 @@ public class Coach
   }
 
   public String getCoachId() { return coachId; }
-  public String getType() { return type; }
+//  public String getType() { return type; }
   public int getAvailableSeatCount()
   {
     return availableSeatCount.get();

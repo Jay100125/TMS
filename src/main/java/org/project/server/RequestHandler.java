@@ -92,6 +92,10 @@ public class RequestHandler implements Runnable
         response.put("message", handleCancellation(request));
         break;
 
+      case "MY_BOOKINGS":
+        response.put("message", handleMyBookings(request));
+        break;
+
         default:
         response.put("message", "400 Invalid command");
     }
@@ -327,6 +331,27 @@ public class RequestHandler implements Runnable
       }
     }
     return "Booking with PNR: " + pnr + " cancelled successfully.";
+  }
+
+  public String handleMyBookings(Map<String, String> request) {
+    var pnr = request.get("pnr");
+    if (pnr == null) {
+      return "400 Invalid pnr";
+    }
+
+    var userBookings = database.getBookingRecord().get(pnr);
+
+    if (userBookings.isEmpty()) {
+      return "No bookings found for pnr: " + pnr;
+    }
+
+    return String.format(
+      "Booking Details:\nPNR: %s\nTrain ID: %s\nCoach Type: %s\nSeats: %s",
+      pnr,
+      userBookings.get("trainId"),
+      userBookings.get("coachType"),
+      userBookings.get("seats")
+    );
   }
 }
 
