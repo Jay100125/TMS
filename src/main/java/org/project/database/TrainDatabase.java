@@ -1,6 +1,6 @@
 package org.project.database;
 
-import org.project.Train;
+import org.project.schema.Train;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

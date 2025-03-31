@@ -1,7 +1,7 @@
 package org.project.server;
 
-import org.project.Coach;
-import org.project.Train;
+import org.project.schema.Coach;
+import org.project.schema.Train;
 import org.project.database.TrainDatabase;
 
 import java.io.*;
@@ -9,8 +9,6 @@ import java.net.Socket;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 

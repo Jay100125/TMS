@@ -1,4 +1,4 @@
-package org.project;
+package org.project.schema;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;

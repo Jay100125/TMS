@@ -450,9 +450,8 @@
 package org.project;
 
 import org.junit.jupiter.api.*;
-import org.project.Train;
-import org.project.Coach;
 import org.project.database.TrainDatabase;
+import org.project.schema.Train;
 import org.project.server.RequestHandler;
 import java.io.*;
 import java.net.Socket;

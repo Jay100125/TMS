@@ -1,17 +1,15 @@
 package org.project.server;
 
-import org.project.Train;
+import org.project.schema.Train;
 import org.project.database.TrainDatabase;
 
 import java.net.ServerSocket;
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class TrainServer
+public class Server
 {
   //  {TrainId -> train details}
 //  private static final ConcurrentHashMap<String, Train> trainMap = new ConcurrentHashMap<>();

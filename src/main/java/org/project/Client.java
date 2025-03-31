@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class TrainClient
+public class Client
 {
   private static final int PORT = 8080;
 
