@@ -2,6 +2,7 @@ package org.project.server;
 
 import org.project.Coach;
 import org.project.Train;
+import org.project.database.TrainDatabase;
 
 import java.io.*;
 import java.net.Socket;
@@ -17,17 +18,21 @@ public class RequestHandler implements Runnable
 {
   private final Socket socket;
 
-  private final ConcurrentHashMap<String, Train> trainMap;
+  private final TrainDatabase database;
 
-  private final ConcurrentHashMap<String, Map<String, String>> bookingRecord;
+//  private final ConcurrentHashMap<String, Train> trainMap;
+//
+//  private final ConcurrentHashMap<String, Map<String, String>> bookingRecord;
 
-  public RequestHandler(Socket socket, ConcurrentHashMap<String, Train> trainMap, ConcurrentHashMap<String, Map<String, String>> bookingRecord)
+  public RequestHandler(Socket socket)
   {
     this.socket = socket;
 
-    this.trainMap = trainMap;
-
-    this.bookingRecord = bookingRecord;
+    this.database = TrainDatabase.INSTANCE;
+//
+//    this.trainMap = trainMap;
+//
+//    this.bookingRecord = bookingRecord;
   }
 
   @Override
@@ -127,7 +132,7 @@ public class RequestHandler implements Runnable
 
     if (result.isEmpty())
     {
-      return "404 No trains available for the given criteria.";
+      return "404 No trains available for the given source and destination at this time.";
     }
 
     var responseBuilder = new StringBuilder("Available Trains:\n");
@@ -161,7 +166,7 @@ public class RequestHandler implements Runnable
   {
     var result = new ArrayList<Train>();
 
-    for (var train : trainMap.values())
+    for (var train : database.getTrainMap().values())
     {
       if (train.getSource().equalsIgnoreCase(source) &&
         train.getDestination().equalsIgnoreCase(destination) &&
@@ -204,7 +209,7 @@ public class RequestHandler implements Runnable
       return "400 Invalid number of seats";
     }
 
-    Train train = trainMap.get(trainId);
+    Train train = database.getTrainMap().get(trainId);
 
     if (train == null)
     {
@@ -261,7 +266,7 @@ public class RequestHandler implements Runnable
     bookingData.put("trainId", trainId);
     bookingData.put("coachType", coachType);
     bookingData.put("seats", String.join(",", confirmedSeats));
-    bookingRecord.put(pnr, bookingData);
+    database.getBookingRecord().put(pnr, bookingData);
 
     return "Booking successful. Train id: " + trainId + " PNR: " + pnr + " Seats: " + String.join(",", confirmedSeats);
   }
@@ -282,7 +287,8 @@ public class RequestHandler implements Runnable
       return "400 Invalid command";
     }
 
-    Map<String, String> booking = bookingRecord.get(pnr);
+    Map<String, String> booking = database.getBookingRecord().get(pnr);
+
 
     if (booking == null)
     {
@@ -294,9 +300,9 @@ public class RequestHandler implements Runnable
       return "403 Booking cancellation denied";
     }
 
-    bookingRecord.remove(pnr);
+    database.getBookingRecord().remove(pnr);
 
-    Train train = trainMap.get(booking.get("trainId"));
+    Train train = database.getTrainMap().get(booking.get("trainId"));
 
     var coachType = booking.get("coachType").toLowerCase();
 
