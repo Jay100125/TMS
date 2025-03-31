@@ -502,8 +502,8 @@ class TrainDatabaseTest {
     Train train = new Train("T1", "A", "B", LocalDate.now(), LocalDate.now().plusDays(1));
     db.addTrain(train);
 
-    assertEquals(train, db.getTrainMap().get("T1"), "Train should be retrievable");
-    assertEquals(1, db.getTrainMap().size());
+    assertEquals(train, db.getTrains().get("T1"), "Train should be retrievable");
+    assertEquals(1, db.getTrains().size());
   }
 
   @Test
@@ -511,7 +511,7 @@ class TrainDatabaseTest {
     db.addTrain(new Train("T1", "A", "B", LocalDate.now(), LocalDate.now()));
     db.reset();
 
-    assertTrue(db.getTrainMap().isEmpty(), "Train map should be empty after reset");
+    assertTrue(db.getTrains().isEmpty(), "Train map should be empty after reset");
     assertTrue(db.getBookingRecord().isEmpty(), "Booking records should be empty after reset");
   }
 

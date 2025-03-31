@@ -164,7 +164,7 @@ public class RequestHandler implements Runnable
   {
     var result = new ArrayList<Train>();
 
-    for (var train : database.getTrainMap().values())
+    for (var train : database.getTrains().values())
     {
       if (train.getSource().equalsIgnoreCase(source) &&
         train.getDestination().equalsIgnoreCase(destination) &&
@@ -207,7 +207,7 @@ public class RequestHandler implements Runnable
       return "400 Invalid number of seats";
     }
 
-    Train train = database.getTrainMap().get(trainId);
+    Train train = database.getTrains().get(trainId);
 
     if (train == null)
     {
@@ -300,7 +300,7 @@ public class RequestHandler implements Runnable
 
     database.getBookingRecord().remove(pnr);
 
-    Train train = database.getTrainMap().get(booking.get("trainId"));
+    Train train = database.getTrains().get(booking.get("trainId"));
 
     var coachType = booking.get("coachType").toLowerCase();
 

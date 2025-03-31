@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class Server
 {
   //  {TrainId -> train details}
-//  private static final ConcurrentHashMap<String, Train> trainMap = new ConcurrentHashMap<>();
+//  private static final ConcurrentHashMap<String, Train> trainMap = new ConcurrentHashMap<>(); // TODO
 //
 ////  pnr -> {userId, trainId, coachType, seats}
 //  private static final ConcurrentHashMap<String, Map<String, String>> bookingRecord = new ConcurrentHashMap<>();
@@ -72,14 +72,12 @@ public class Server
     train.addCoach("Sleeper", "C2", 5);
     train.addCoach("Sleeper", "C3", 5);
     train.addCoach("AC", "A1", 5);
-//    trainMap.put(train.getTrainId(), train);
     db.addTrain(train);
 
     Train train2 = new Train("54321", "SA", "SB",
       LocalDate.of(2025, 10, 10), LocalDate.of(2025, 10, 11));
     train2.addCoach("Sleeper", "C1", 3);
     train2.addCoach("Sleeper", "C2", 2);
-//    trainMap.put(train2.getTrainId(), train2);
     db.addTrain(train2);
 
     System.out.println("Created sample train data");

@@ -8,11 +8,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public enum TrainDatabase {
   INSTANCE;
 
-  private final ConcurrentHashMap<String, Train> trainMap = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Train> trains = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Map<String, String>> bookingRecord = new ConcurrentHashMap<>();
 
-  public ConcurrentHashMap<String, Train> getTrainMap() {
-    return trainMap;
+  public ConcurrentHashMap<String, Train> getTrains() {
+    return trains;
   }
 
   public ConcurrentHashMap<String, Map<String, String>> getBookingRecord() {
@@ -20,11 +20,11 @@ public enum TrainDatabase {
   }
 
   public void addTrain(Train train) {
-    trainMap.put(train.getTrainId(), train);
+    trains.put(train.getTrainId(), train);
   }
 
   public void reset() {
-    trainMap.clear();
+    trains.clear();
     bookingRecord.clear();
   }
 }
