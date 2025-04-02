@@ -76,7 +76,7 @@ public class Server
   {
     TrainDatabase db = TrainDatabase.INSTANCE;
 
-    Train train = new Train("12345", "new mumbai", "SB",
+    Train train = new Train("12345", "Ahmedabad", "Surat",
       LocalDate.of(2025, 10, 10), LocalDate.of(2025, 10, 11));
     train.addCoach("Sleeper", "C1", 5);
     train.addCoach("Sleeper", "C2", 5);
